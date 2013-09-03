@@ -72,7 +72,8 @@ getSudokuBlock s b
         dropTake d t a = ((take t) . (drop d)) a
 
 
--- 3 All valid [True*9] which after nub returns [True] of length 1
+-- 3 Checks each row and puts true if valid and false if not
+---  If you remove doubles and are left with [True] none were false.
 sudokuRowsValid :: Sudoku -> Bool
 sudokuRowsValid su
   | (nub (map (validRow su) [1..9])) == [True] = True
@@ -80,23 +81,26 @@ sudokuRowsValid su
   where 
     validRow s r = (sudokuSetIsValid . getSudokuRow s) r
 
-{-
 
--- 3 All valid [True*9] which after nub returns [True] of length 1
+-- 3 Checks each column and puts true if valid and false if not
+---  If you remove doubles and are left with [True] none were false.
 sudokuColumnsValid :: Sudoku -> Bool
 sudokuColumnsValid su
-  | length $ nub (map validColumn su [1..9]) < 2 = True
+  | (nub (map (validColumn su) [1..9])) == [True] = True
   | otherwise = False
   where 
-    validColumn s r = (sudokuSetIsValid . getSudokuColumn s r)
+    validColumn s c = (sudokuSetIsValid . getSudokuColumn s) c
 
--- 3 All valid [True*9] which after nub returns [True] of length 1    
+
+
+-- 3 Checks each block and puts true if valid and false if not
+---  If you remove doubles and are left with [True] none were false. 
 sudokuBlocksValid :: Sudoku -> Bool
 sudokuBlocksValid su
-  | (length $ (nub (map validBlock su [1..9]))) < 2 = True
+  | (nub (map (validBlock su) [1..9])) == [True] = True
   | otherwise = False
   where
-    validBlock s r = (sudokuSetIsValid . (getSudokuBlock s r)) -- validBlock :: Sudoku -> Int -> [Int] -> Bool  #(Hell Yea!)
+    validBlock s b = (sudokuSetIsValid . getSudokuBlock s) b -- validBlock :: Sudoku -> Int -> [Int] -> Bool  #(Hell Yea!)
 
 
 sudokuIsValid :: Sudoku -> Bool
@@ -109,31 +113,6 @@ sudokuIsValid su =
     else False
   else False
   
--}
-
-{-
-
-
-
-sudokuBlocksValid :: Sudoku -> Bool
-    
-
-
-
-
-
-getSudokuColumn :: Sudoku -> Int -> [Int]
-
-getSudokuBlock :: Sudoku -> Int -> [Int]
-
-solveSudoku :: Sudoku -> Sudoku
-
-sudokuIsSolved :: Sudoku -> Bool
-
-canSolveSudoku :: Sudoku -> Bool
-
--}
-
 
 testSudoku =  [
               0,0,0,2,6,0,7,0,1,
@@ -146,18 +125,19 @@ testSudoku =  [
               0,4,0,0,5,0,0,3,6,
               7,0,3,0,1,8,0,0,0
               ]
-solution =  [
-            4,3,5,2,6,9,7,8,1,
-            6,8,2,5,7,1,4,9,3,
-            1,9,7,8,3,4,5,6,2,
-            8,2,6,1,9,5,3,4,7,
-            3,7,4,6,8,2,9,1,5,
-            9,5,1,7,4,3,6,2,8,
-            5,1,9,3,2,6,8,7,4,
-            2,4,8,9,5,7,1,3,6,
-            7,6,3,4,1,8,2,5,9
-            ]
+              
+solution =    [
+              4,3,5,2,6,9,7,8,1,
+              6,8,2,5,7,1,4,9,3,
+              1,9,7,8,3,4,5,6,2,
+              8,2,6,1,9,5,3,4,7,
+              3,7,4,6,8,2,9,1,5,
+              9,5,1,7,4,3,6,2,8,
+              5,1,9,3,2,6,8,7,4,
+              2,4,8,9,5,7,1,3,6,
+              7,6,3,4,1,8,2,5,9
+              ]
 
-main = print (sudokuRowsValid testSudoku)
+main = print (sudokuIsValid testSudoku)
 
 
