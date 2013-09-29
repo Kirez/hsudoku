@@ -1,143 +1,64 @@
+--WIP
+
+--Imports
 import Data.List
 
-type Sudoku = [Int]
+--Types
+type Cell 		= ((Int, Int), [Int])
+type Sudoku 	= [Cell] 
+type CellSet 	= ([Cell], [Int])
+type Row 		= (Int, CellSet)
+type Column 	= (Int, CellSet)
+type Block  	= ((Int,Int), CellSet)
 
-sudokuSetIsWithinRange :: [Int] -> Bool
-sudokuSetIsWithinRange st =
-  wrong st + length st == 9
-  where 
-    wrong s = (length . filter (>9)) st + (length . filter (<0)) st
-    
-sudokuSetHasDoubles :: [Int] -> Bool
-sudokuSetHasDoubles st
-  | (length (nub (filter (/=0) st))) == (length (filter (/=0) st)) = False
-  | otherwise = True
-      
+--Function definitions
+--gets
+getSudokuSolution 	:: Sudoku 	-> Sudoku 	--Get a solution
+getSudokuSolutions	:: Sudoku	-> [Sudoku] --Get all solutions
 
-sudokuSetIsValid :: [Int] -> Bool
-sudokuSetIsValid st =
-  if sudokuSetIsWithinRange st then
-    if sudokuSetHasDoubles st then 
-      False
-    else
-      True
-  else
-    False
-    
-sudokuSetContainsAll :: [Int] -> Bool
-sudokuSetContainsAll st = sort st == [1..9]
+getSudokuRow 		:: Sudoku 	-> Int		-> Row
+getSudokuColumn 	:: Sudoku 	-> Int		-> Column
+getSudokuBlock 		:: Sudoku 	-> Int		-> Int		-> Block
+getSudokuCell		:: Sudoku	-> Int		-> Int		-> Cell
+getCellSetPossibles :: CellSet 	-> [Int]
+getRowPossibles 	:: Row 		-> [Int]
+getColumnPossibles 	:: Column 	-> [Int]
+getBlockPossibles 	:: Block 	-> [Int]
+getCellRowNum 		:: Cell 	-> Int
+getCellColumnNum 	:: Cell 	-> Int
+getCellBlockNum 	:: Cell 	-> Int
+getRowCells 		:: Row 		-> [Cell]
+getColumnCells		:: Column	-> [Cell]
+getBlockCells		:: Block	-> [Cell]
+getSudokuMissing	:: Sudoku	-> Int
+getSudokuPlaced		:: Sudoku	-> Int
+getRowMissing		:: Row		-> Int
+getRowPlaced		:: Row		-> Int
+getColumnMissing	:: Column	-> Int
+getColumnPlaced		:: Column	-> Int
+getBlockMissing		:: Block	-> Int
+getBlockPlaced		:: Block	-> Int
 
+--sets
+setCell				:: Cell		-> Int		-> Cell
+sudokuSetCell		:: Sudoku	-> Cell		-> Sudoku
 
+--checks
+rowIsValid			:: Row		-> Bool
+sudokuIsValid		:: Sudoku 	-> Bool
+sudokuIsDone		:: Sudoku	-> Bool
 
-sudokuSetIsDone ::  [Int] -> Bool
-sudokuSetIsDone st =
-  if sudokuSetIsValid st then 
-    if sudokuSetContainsAll st then 
-      True
-    else
-      False
-  else
-    False
+--Practical
 
+--Hazard zone
+main = print "Nothing to see here"
 
-getSudokuRow :: Sudoku -> Int -> [Int]
-getSudokuRow s r
-  | (length s == 81) && (r > 0) && (r < 10) = (map ((!!) s) [r*9-9 .. r*9-1])
-  | otherwise = [] 
-  
+--Psudocode
+{-
 
-getSudokuColumn :: Sudoku -> Int -> [Int]
-getSudokuColumn s c
-  | (length s == 81) && (c > 0) && (c < 10) = (map ((!!) s) [c-1,c+8 .. 9*8 + c -1])
-  | otherwise = []
-
-getSudokuBlock :: Sudoku -> Int -> [Int]
-getSudokuBlock s b
-  | (length s == 81) && (b > 0) && (b < 10) = getBlock s b
-  | otherwise = []
-  where
-    getBlock s b
-      | b == 1 = (dropTake 0 3 (getSudokuRow s 1)) ++ (dropTake 0 3 (getSudokuRow s 2)) ++ (dropTake 0 3 (getSudokuRow s 3))
-      | b == 2 = (dropTake 3 3 (getSudokuRow s 1)) ++ (dropTake 3 3 (getSudokuRow s 2)) ++ (dropTake 3 3 (getSudokuRow s 3))
-      | b == 3 = (dropTake 6 3 (getSudokuRow s 1)) ++ (dropTake 6 3 (getSudokuRow s 2)) ++ (dropTake 6 3 (getSudokuRow s 3))
-      
-      | b == 4 = (dropTake 0 3 (getSudokuRow s 4)) ++ (dropTake 0 3 (getSudokuRow s 5)) ++ (dropTake 0 3 (getSudokuRow s 6))
-      | b == 5 = (dropTake 3 3 (getSudokuRow s 4)) ++ (dropTake 3 3 (getSudokuRow s 5)) ++ (dropTake 3 3 (getSudokuRow s 6))
-      | b == 6 = (dropTake 6 3 (getSudokuRow s 4)) ++ (dropTake 6 3 (getSudokuRow s 5)) ++ (dropTake 6 3 (getSudokuRow s 6))
-      
-      | b == 7 = (dropTake 0 3 (getSudokuRow s 7)) ++ (dropTake 0 3 (getSudokuRow s 8)) ++ (dropTake 0 3 (getSudokuRow s 9))
-      | b == 8 = (dropTake 3 3 (getSudokuRow s 7)) ++ (dropTake 3 3 (getSudokuRow s 8)) ++ (dropTake 3 3 (getSudokuRow s 9))
-      | b == 9 = (dropTake 6 3 (getSudokuRow s 7)) ++ (dropTake 6 3 (getSudokuRow s 8)) ++ (dropTake 6 3 (getSudokuRow s 9)) 
-      where
-        dropTake d t a = ((take t) . (drop d)) a
-
-
--- 3 Checks each row and puts true if valid and false if not
----  If you remove doubles and are left with [True] none were false.
-sudokuRowsValid :: Sudoku -> Bool
-sudokuRowsValid su
-  | (nub (map (validRow su) [1..9])) == [True] = True
-  | otherwise = False
-  where 
-    validRow s r = (sudokuSetIsValid . getSudokuRow s) r
-
-
--- 3 Checks each column and puts true if valid and false if not
----  If you remove doubles and are left with [True] none were false.
-sudokuColumnsValid :: Sudoku -> Bool
-sudokuColumnsValid su
-  | (nub (map (validColumn su) [1..9])) == [True] = True
-  | otherwise = False
-  where 
-    validColumn s c = (sudokuSetIsValid . getSudokuColumn s) c
-
-
-
--- 3 Checks each block and puts true if valid and false if not
----  If you remove doubles and are left with [True] none were false. 
-sudokuBlocksValid :: Sudoku -> Bool
-sudokuBlocksValid su
-  | (nub (map (validBlock su) [1..9])) == [True] = True
-  | otherwise = False
-  where
-    validBlock s b = (sudokuSetIsValid . getSudokuBlock s) b -- validBlock :: Sudoku -> Int -> [Int] -> Bool  #(Hell Yea!)
-
-
-sudokuIsValid :: Sudoku -> Bool
-sudokuIsValid su =
-  if sudokuRowsValid su then
-    if sudokuColumnsValid su then
-      if sudokuBlocksValid su then
-        True
-      else False
-    else False
-  else False
-  
-
-testSudoku =  [
-              0,0,0,2,6,0,7,0,1,
-              6,8,0,0,7,0,0,9,0,
-              1,9,0,0,0,4,5,0,0,
-              8,2,0,1,0,0,0,4,0,
-              0,0,4,6,0,2,9,0,0,
-              0,5,0,0,0,3,0,2,8,
-              0,0,9,3,0,0,0,7,4,
-              0,4,0,0,5,0,0,3,6,
-              7,0,3,0,1,8,0,0,0
-              ]
-              
-solution =    [
-              4,3,5,2,6,9,7,8,1,
-              6,8,2,5,7,1,4,9,3,
-              1,9,7,8,3,4,5,6,2,
-              8,2,6,1,9,5,3,4,7,
-              3,7,4,6,8,2,9,1,5,
-              9,5,1,7,4,3,6,2,8,
-              5,1,9,3,2,6,8,7,4,
-              2,4,8,9,5,7,1,3,6,
-              7,6,3,4,1,8,2,5,9
-              ]
-
-main = print (sudokuIsValid testSudoku)
-
-
+getSolutions
+	solveOne
+		getPossibles
+		setEnsured
+		solveOne
+-}
