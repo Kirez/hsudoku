@@ -13,13 +13,16 @@ type Block  	= ((Int,Int), CellSet)
 
 --Function definitions
 --gets
-getSudokuSolution 	:: Sudoku 	-> Sudoku 	--Get a solution
-getSudokuSolutions	:: Sudoku	-> [Sudoku] --Get all solutions
-
+getSudokuSolution 	:: Sudoku 	-> Sudoku 	
+getSudokuSolutions	:: Sudoku	-> [Sudoku] 
 getSudokuRow 		:: Sudoku 	-> Int		-> Row
 getSudokuColumn 	:: Sudoku 	-> Int		-> Column
 getSudokuBlock 		:: Sudoku 	-> Int		-> Int		-> Block
 getSudokuCell		:: Sudoku	-> Int		-> Int		-> Cell
+getSudokuRows		:: Sudoku	-> [Row]
+getSudokuColumns	:: Sudoku	-> [Column]
+getSudokuBlocks		:: Sudoku	-> [Block]
+getSudokuCells		:: Sudoku	-> [Cell]
 getCellSetPossibles :: CellSet 	-> [Int]
 getRowPossibles 	:: Row 		-> [Int]
 getColumnPossibles 	:: Column 	-> [Int]
@@ -45,10 +48,18 @@ sudokuSetCell		:: Sudoku	-> Cell		-> Sudoku
 
 --checks
 rowIsValid			:: Row		-> Bool
+columnIsValid		:: Column	-> Bool
+blockIsValid		:: Block	-> Bool
+cellISValid			:: Cell		-> Bool
 sudokuIsValid		:: Sudoku 	-> Bool
 sudokuIsDone		:: Sudoku	-> Bool
 
 --Practical
+makeEmptyCell		:: Int 		-> Int		-> Cell
+sudokuFromList		:: [Int]	-> Sudoku
+
+
+
 
 --Hazard zone
 main = print "Nothing to see here"
