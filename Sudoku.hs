@@ -4,7 +4,6 @@
 import Data.List
 import Data.Char
 import System.IO
-import Control.Monad
 
 --Types
 type Cell		= Int
@@ -15,21 +14,21 @@ type Block		= [Cell]
 type Position 	= (Int, Int)
 
 --Functions
-{-solveSudoku		:: Sudoku	-> [Sudoku]
+{-solveSudoku		:: Sudoku	-> [Sudoku]-}
 
-
-getBlock		:: Sudoku	-> Position		-> Block
-getRows			:: Sudoku	-> [Row]
-getColumns		:: Sudoku	-> [Column]
-getBlocks		:: Sudoku	-> [Block]-}
-
-getCell			:: Sudoku	-> Position		-> Cell
-getRow			:: Sudoku	-> Int			-> Row
-getColumn		:: Sudoku	-> Int			-> Column
+getCell			:: Sudoku	-> Position	-> Cell
+getRow			:: Sudoku	-> Int		-> Row
+getColumn		:: Sudoku	-> Int		-> Column
+getBlock		:: Sudoku	-> Position	-> Block
+getRowAt		:: Sudoku	-> Position	-> Row
+getColumnAt		:: Sudoku	-> Position	-> Column
+getBlockAt		:: Sudoku	-> Position	-> Block
 getCells		:: Sudoku	-> [Cell]
 getRows			:: Sudoku	-> [Row]
 getColumns		:: Sudoku	-> [Column]
 getBlocks		:: Sudoku	-> [Block]
+getPossibles	:: [Cell]	-> [Cell]
+getPossiblesAt	:: Sudoku	-> Position	-> [Cell]
 
 isValid			:: [Cell]	-> Bool
 isValidRow		:: Row		-> Bool
@@ -55,24 +54,38 @@ getBlock s (x,y)
 	where
 		grabBlockChunk s (x,y) n = take 3 (drop (x*3) (getRow s (y*3+n)))
 
+getRowAt s (_,y) = getRow s y
+
+getColumnAt s (x,_) = getColumn s x
+
+getBlockAt s (x,y) = getBlock s (x `quot` 3, y `quot` 3)
 
 getCells = concat
 
 getRows s = map (getRow s) [0..8]
+
 getColumns s = map (getColumn s) [0..8]
+
 getBlocks s = [(getBlock s (x,y)) | y <- [0..2], x <- [0..2]]
 
+getPossibles c = [x | x <- [1..9], not(x `elem` c)]
+
+getPossiblesAt s (x,y) = [p | p <- [1..9], (p == (getCell s (x,y))) || (not(p `elem` nub(getRow s y ++ getColumn s x ++ getBlockAt s (x,y))) && (getCell s (x,y) == 0))]
 
 isValid s = check (sort s)
 	where
 		check (x:xs)
 			| xs == [] = True
+			| x > 9 || x < 0 = False
 			| x == (head xs) && x /= 0 = False
 			| otherwise = check xs
 
 isValidRow = isValid
+
 isValidColumn = isValid
+
 isValidBlock = isValid
+
 isValidSudoku s = (all isValidRow (getRows s)) && (all isValidColumn (getColumns s)) && (all isValidBlock (getBlocks s))
 
 --IO
@@ -92,19 +105,6 @@ showSudoku s = sudokuFormat (toString s)
 			| n == 0 = '.'
 			| n `elem` [1..9] = intToDigit n
 			| otherwise = '.'
-
-fromChar c
-	| c == '*' = 0
-	| c == '.' = 0
-	| c == '_' = 0
-	| c == '0' = 0
-	| c `elem` ['1'..'9'] = read [c] :: Int
-	| otherwise = 0
-	
-toRows d
-	| length d < 9 = [[]]
-	| length d == 9 = [d]
-	| otherwise = (take 9 d) : (toRows (drop 9 d))
 		
 readSudoku s
 	| length s /= 81 = [[]]
@@ -137,14 +137,9 @@ testSudokus = 	"2000400055061000000010020800000012000000000633040000500300078400
 				\007004060000600708000370040004000085030000090280000400090015000108002000040700800\n\
 				\700020040052070600900005000000080010008106300010090000000200007006010820020060009"
 
-
 main = do
 	x <- readFile "sudokus.txt"
 	let sudokus = readSudokus x
-	let test = [showSudoku (sudokus !! x) ++ "\n" | x <- [0..(length sudokus)-1],(isValidSudoku (sudokus !! x)) == False]
+	let errors = [showSudoku (sudokus !! x) ++ "\n" | x <- [0..(length sudokus)-1],(isValidSudoku (sudokus !! x)) == False]
 	let testSudoku = sudokus !! 0
-	print (length test) --Number of incorrect sudokus
-
-	
-
-
+	putStrLn (show (length errors))
