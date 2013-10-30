@@ -20,14 +20,29 @@ blockSize :: Grid -> Int
 numRows :: Grid -> Int
 numColumns :: Grid -> Int
 numBlocks :: Grid -> Int
-positionAt :: Point -> Grid -> Position
-pointAt :: Position -> Grid -> Point
+position :: Grid -> Point -> Position
+point :: Grid -> Position -> Point
 chunk :: Int -> [a] -> [[a]]
 valid :: Grid -> Bool				
 symbols :: Grid -> [Symbol]
 symbolsLeft :: Grid -> [Symbol]
 symbolsDone :: Grid -> [Symbol]
 printFormat :: Grid -> String
+cell :: Grid -> Position -> Symbol
+cellAt :: Grid -> Point -> Symbol
+cells :: Grid -> [Symbol]
+row :: Grid -> Position -> Row
+rowAt :: Grid -> Point -> Row
+rows :: Grid -> [Row]
+column :: Grid -> Position -> Column
+columnAt :: Grid -> Point -> Column
+columns :: Grid -> [Column]
+
+
+block :: Grid -> Position -> Block
+blockAtCP :: Grid -> Point -> Block --At a cells point
+blockAtBP :: Grid -> Point -> Block --At a blockwise point
+
 --possibleLeft :: Grid -> [Symbol]
 --solvable :: Grid -> Bool
 
@@ -36,8 +51,8 @@ blockSize g = round ( sqrt ( fromIntegral ( gridSize g )))
 numRows = gridSize
 numColumns = gridSize
 numBlocks = gridSize
-positionAt (x,y) g = y * (numColumns g) + x
-pointAt p g = pt
+position g (x,y) = y * (numColumns g) + x
+point g p = pt
 	where
 		pt = (x,y)
 		x = p - y * (gridSize g)
@@ -78,8 +93,52 @@ printFormat g = fg
 		sl = "+" ++ (replicate (gs * 2 + bs*2 - 1) '-') ++ "+"
 		ln = (concat (intersperse "+" ([(replicate (bs*2) '-')] ++ (replicate (bs-2) (replicate (bs*2+1) '-')) ++ [(replicate (bs*2) '-')])))
 		fg = addLines (map (++"\n") (map (intersperse ' ') (map concat (map (intersperse "|") (map (chunk bs) g)))))
-		addLines d = sl ++ "\n" ++ concat["| "++l ++ " |\n" | l <- lines(concat(intercalate [ln++"\n"] (chunk bs d)))] ++ sl ++ "\n"
+		addLines d = sl ++ "\n" ++ concat["| " ++ l ++ " |\n" | l <- lines(concat(intercalate [ln++"\n"] (chunk bs d)))] ++ sl ++ "\n"
 
+cellAt g (x,y)
+	| length g <= y = '0'
+	| length (g !! y) <= x = '0'
+	| otherwise = g !! y !! x
+
+cell g p = cellAt g (point g p)
+
+cells = concat
+		
+row g p
+	| length g <= p = []
+	| otherwise = g !! p
+	
+rowAt g (_,y) = row g y
+
+rows g = map (row g) [0..(numRows g)-1]
+
+column g p = [r !! p | r <- rows]
+	where
+		rows = filter (\x -> length x > p) [row g r | r <- [0..(length g) - 1]]
+		
+columnAt g (x,_) = column g x
+
+columns g = map (column g) [0..(numColumns g)-1]
+
+block g p = blockAtBP g (x,y)
+	where
+		y = p `quot` bs
+		x = p - y * bs
+		bs = blockSize g
+		
+blockAtBP g (x,y) = blk
+	where
+		bs = blockSize g
+		rs = take bs (drop (y*bs) (rows g))
+		cks = map (chunk bs) rs
+		blk = concat(concatMap (take 1) (map (drop x) cks))
+		
+blockAtCP g (x,y) = blockAtBP g (nx,ny)
+	where
+		bs = blockSize g
+		nx = x `quot` bs
+		ny = y `quot` bs
+		
 main = do
 	let g4 = "1234000000000000"
 	let g3 = "123456789abcdefghijklmnop000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
@@ -89,7 +148,7 @@ main = do
 	let test2 = readGrid g2
 	let test3 = readGrid g3
 	let test4 = readGrid g4
-	mapM_ putStrLn test
-	mapM_ putStrLn test2
-	putStrLn (printFormat test3)
+	putStrLn (printFormat test)
+	putStrLn (show (blockAtCP test (2,8)))
+	--mapM_ putStrLn (map show (map (block test) [0..8]))
 	--mapM_ putStrLn (map show (map concat (map (intersperse "|") (map (chunk (blockSize test)) test))))
