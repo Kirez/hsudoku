@@ -38,12 +38,11 @@ column :: Grid -> Position -> Column
 columnAt :: Grid -> Point -> Column
 columns :: Grid -> [Column]
 
-
 block :: Grid -> Position -> Block
 blockAtCP :: Grid -> Point -> Block --At a cells point
 blockAtBP :: Grid -> Point -> Block --At a blockwise point
+psbSymbolsAt :: Grid -> Point -> [Symbol]
 
---possibleLeft :: Grid -> [Symbol]
 --solvable :: Grid -> Bool
 
 gridSize (fr:rs) = length fr
@@ -138,6 +137,13 @@ blockAtCP g (x,y) = blockAtBP g (nx,ny)
 		bs = blockSize g
 		nx = x `quot` bs
 		ny = y `quot` bs
+		
+psbSymbolsAt g (x,y) = psb
+	where
+		r = row g y
+		c = column g x
+		b = blockAtCP g (x,y)
+		psb = " " -- WIP
 		
 main = do
 	let g4 = "1234000000000000"
