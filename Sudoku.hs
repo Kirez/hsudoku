@@ -42,8 +42,14 @@ block :: Grid -> Position -> Block
 blockAtCP :: Grid -> Point -> Block --At a cells point
 blockAtBP :: Grid -> Point -> Block --At a blockwise point
 psbSymbolsAt :: Grid -> Point -> [Symbol]
+eliminate :: Grid -> Grid
+set :: Grid -> Point -> Symbol -> Grid
+assign :: Grid -> Point -> Symbol -> Grid
+complete :: Grid -> Bool
 
 --solvable :: Grid -> Bool
+
+--Extra
 
 gridSize (fr:rs) = length fr
 blockSize g = round ( sqrt ( fromIntegral ( gridSize g )))
@@ -138,23 +144,42 @@ blockAtCP g (x,y) = blockAtBP g (nx,ny)
 		nx = x `quot` bs
 		ny = y `quot` bs
 		
-psbSymbolsAt g (x,y) = psb
+psbSymbolsAt g (x,y)
+	| ce `elem` s = []
+	| otherwise = psb
 	where
+		s = symbols g
+		ce = cellAt g (x,y)
 		r = row g y
 		c = column g x
 		b = blockAtCP g (x,y)
-		psb = " " -- WIP
+		sl = symbolsLeft g
+		np = nub (r++c++b)
+		psb = [p | p <- sl, not (p `elem` np)]
+
+set g (x,y) c
+	| x > gs || y > gs = g
+	| otherwise = ng
+	where
+		gs = gridSize g
+		ng = [[if ix == x && iy == y then c else cellAt g (ix,iy) | ix <- [0..gs-1]] | iy <- [0..gs-1]]
+		
+assign g p = eliminate . (set g p)
+
+eliminate g = ng
+	where
+		gs = gridSize g
+		elims = [(x,y,e) | x <- [0..gs-1], y <- [0..gs-1], let p = psbSymbolsAt g (x,y), length p == 1, e <- p]
+		ng = elim g elims
+		elim g [] = g
+		elim g ((x,y,e):_) = eliminate (set g (x,y) e)
+		
+complete g = valid g && (length $ symbolsLeft g) == 0
+
 		
 main = do
-	let g4 = "1234000000000000"
-	let g3 = "123456789abcdefghijklmnop000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-	let g2 = "123456789abcdefg000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-	let g = "200040005506100000001002080000001200000000063304000050030007840002604000000090002"
-	let test = readGrid g
-	let test2 = readGrid g2
-	let test3 = readGrid g3
-	let test4 = readGrid g4
+	let g5 = "64..139..1...264...29.457....2...83.86..37.197..2.9.....13..69.9364.8.2...5......"
+	let test = readGrid g5
 	putStrLn (printFormat test)
-	putStrLn (show (blockAtCP test (2,8)))
-	--mapM_ putStrLn (map show (map (block test) [0..8]))
-	--mapM_ putStrLn (map show (map concat (map (intersperse "|") (map (chunk (blockSize test)) test))))
+	let el = eliminate test
+	putStrLn (printFormat el)
