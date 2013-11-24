@@ -1,5 +1,6 @@
 import Data.List
 import Data.Char
+import Data.Maybe
 
 type Grid = [String]
 type Row = String
@@ -9,6 +10,10 @@ type Values = String
 type Position = Int
 type Symbol = Char
 type Point = (Position, Position)
+type Possible = (Point, [Symbol])
+type PossibleGrid = (Grid, [Possible])
+
+data Set = Row | Column | Block
 
 gridSize :: Grid -> Int
 
@@ -41,11 +46,20 @@ columns :: Grid -> [Column]
 block :: Grid -> Position -> Block
 blockAtCP :: Grid -> Point -> Block --At a cells point
 blockAtBP :: Grid -> Point -> Block --At a blockwise point
-psbSymbolsAt :: Grid -> Point -> [Symbol]
+possible :: Grid -> Point -> Possible
+possibles :: Grid -> [Possible]
 eliminate :: Grid -> Grid
 set :: Grid -> Point -> Symbol -> Grid
 assign :: Grid -> Point -> Symbol -> Grid
 complete :: Grid -> Bool
+choices :: Grid -> Int
+search :: [Grid] -> Maybe Grid
+--search' :: [Possible] -> Maybe Grid
+bestChoice :: [Possible] -> Possible
+possibleGrids :: Grid -> [Grid]
+sortPossibles :: [Possible] -> [Possible]
+solve :: Grid -> Grid
+orderGrids :: [Grid] -> [Grid]
 
 --solvable :: Grid -> Bool
 
@@ -143,19 +157,6 @@ blockAtCP g (x,y) = blockAtBP g (nx,ny)
 		bs = blockSize g
 		nx = x `quot` bs
 		ny = y `quot` bs
-		
-psbSymbolsAt g (x,y)
-	| ce `elem` s = []
-	| otherwise = psb
-	where
-		s = symbols g
-		ce = cellAt g (x,y)
-		r = row g y
-		c = column g x
-		b = blockAtCP g (x,y)
-		sl = symbolsLeft g
-		np = nub (r++c++b)
-		psb = [p | p <- sl, not (p `elem` np)]
 
 set g (x,y) c
 	| x > gs || y > gs = g
@@ -169,17 +170,67 @@ assign g p = eliminate . (set g p)
 eliminate g = ng
 	where
 		gs = gridSize g
-		elims = [(x,y,e) | x <- [0..gs-1], y <- [0..gs-1], let p = psbSymbolsAt g (x,y), length p == 1, e <- p]
+		elims = [(x,y,e) | x <- [0..gs-1], y <- [0..gs-1], let p = snd $ possible g (x,y), length p == 1, e <- p]
 		ng = elim g elims
 		elim g [] = g
 		elim g ((x,y,e):_) = eliminate (set g (x,y) e)
 		
 complete g = valid g && (length $ symbolsLeft g) == 0
 
+possible g p@(x,y)
+	| ce `elem` s = (p,[])
+	| otherwise = (p,psb)
+	where
+		s = symbols g
+		ce = cellAt g (x,y)
+		r = row g y
+		c = column g x
+		b = blockAtCP g (x,y)
+		sl = symbolsLeft g
+		np = nub (r++c++b)
+		psb = [p | p <- sl, not (p `elem` np)]
+		
+possibles g = filter ((>0) . length . snd) (map (possible g) (map (point g) gridRange))
+	where
+		gs = gridSize g
+		gridRange = [0..gs*gs-1]
+
+choices g = length (concatMap snd (possibles g))
+choices' g = length (filter (`elem` sValues) (concat g))
+
+search (g:gs)
+	| g == [] = Nothing
+	| complete g = Just g
+	| valid g = search(map eliminate (possibleGrids g) ++ gs)
+	| otherwise = search gs
+
+sortPossibles = sortBy comparePossibles
+	where
+		comparePossibles a b = ((length . snd) a) `compare` ((length . snd) b)
+		
+bestChoice p = head (sortPossibles p)
+		
+possibleGrids g = gds
+	where
+		psbs = sortPossibles (possibles g)
+		gds = concatMap (setPossible g) psbs
+		setPossible g (p,s) = gs
+			where
+				gs = map (set g p) s
+				
+solve g
+	| complete g = g
+	| valid g /= True = g
+	| otherwise = case solution of
+						Just _ -> fromJust solution
+						Nothing -> g
+	where
+		solution = (search [g])
+		
+orderGrids = sortBy compareGrids
+	where compareGrids a b = choices a `compare` choices b
 		
 main = do
-	let g5 = "64..139..1...264...29.457....2...83.86..37.197..2.9.....13..69.9364.8.2...5......"
-	let test = readGrid g5
-	putStrLn (printFormat test)
-	let el = eliminate test
-	putStrLn (printFormat el)
+	let g5 = "020030090000907000900208005004806500607000208003102900800605007000309000030020050"
+	let test1 = readGrid g5
+	putStrLn (printFormat $ solve test1)
