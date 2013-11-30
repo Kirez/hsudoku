@@ -66,6 +66,7 @@ orderGrids :: [Grid] -> [Grid]
 --Extra
 
 gridSize (fr:rs) = length fr
+gridSize [] = 0
 blockSize g = round ( sqrt ( fromIntegral ( gridSize g )))
 numRows = gridSize
 numColumns = gridSize
@@ -201,8 +202,14 @@ choices' g = length (filter (`elem` sValues) (concat g))
 search (g:gs)
 	| g == [] = Nothing
 	| complete g = Just g
-	| valid g = search(map eliminate (possibleGrids g) ++ gs)
+	| length psbgs == 0 = search gs
+	| valid g && rst /= [] = search(bst : gs ++ rst)
+	| valid g = search (bst : gs)
 	| otherwise = search gs
+	where
+		psbgs = map eliminate (possibleGrids g)
+		bst = if length psbgs > 0 then head psbgs else []
+		rst = if length psbgs > 0 then tail psbgs else []
 
 sortPossibles = sortBy comparePossibles
 	where
@@ -231,6 +238,9 @@ orderGrids = sortBy compareGrids
 	where compareGrids a b = choices a `compare` choices b
 		
 main = do
+	line <- getLine
+	let ginput = readGrid line
 	let g5 = "020030090000907000900208005004806500607000208003102900800605007000309000030020050"
 	let test1 = readGrid g5
-	putStrLn (printFormat $ solve test1)
+	if valid ginput then putStrLn (printFormat $ solve ginput) else putStrLn "Could not read sudoku..."
+	
