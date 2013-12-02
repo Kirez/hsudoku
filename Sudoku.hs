@@ -1,6 +1,9 @@
 import Data.List
 import Data.Char
 import Data.Maybe
+import Control.Monad
+import System.IO
+import System.Environment
 
 type Grid = [String]
 type Row = String
@@ -33,6 +36,8 @@ symbols :: Grid -> [Symbol]
 symbolsLeft :: Grid -> [Symbol]
 symbolsDone :: Grid -> [Symbol]
 printFormat :: Grid -> String
+readGrid :: String -> Grid
+showGrid :: Grid -> String
 cell :: Grid -> Position -> Symbol
 cellAt :: Grid -> Point -> Symbol
 cells :: Grid -> [Symbol]
@@ -78,11 +83,11 @@ point g p = pt
 		x = p - y * (gridSize g)
 		y = p `quot` (gridSize g)
 
-readGrid :: String -> Grid
 readGrid sg = chunk (round (sqrt ( fromIntegral (length fsg)))) [c | c <- fsg, c `elem` aValues]
 	where
 		fsg = filter (`elem` aValues) sg
 
+showGrid = concat
 
 chunk _ [] = []
 chunk n a = cnk : (chunk n rst)
@@ -238,9 +243,14 @@ orderGrids = sortBy compareGrids
 	where compareGrids a b = choices a `compare` choices b
 		
 main = do
-	line <- getLine
-	let ginput = readGrid line
-	let g5 = "020030090000907000900208005004806500607000208003102900800605007000309000030020050"
-	let test1 = readGrid g5
-	if valid ginput then putStrLn (printFormat $ solve ginput) else putStrLn "Could not read sudoku..."
-	
+	args <- getArgs
+	let inFile = args !! 0
+	let outFile = args !! 1
+	handle <- openFile outFile WriteMode
+	hClose handle
+	handle <- openFile inFile ReadMode
+	contents <- hGetContents handle
+	let sudokus = map readGrid (lines contents)
+	mapM (appendFile outFile) (map (++"\n") (map showGrid (map solve sudokus)))
+	hClose handle
+	putStrLn ("Done solving " ++ (show $ length sudokus) ++ " sudokus!")
