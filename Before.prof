@@ -1,0 +1,226 @@
+	Tue Feb 11 18:38 2014 Time and Allocation Profiling Report  (Final)
+
+	   Sudoku +RTS -p -RTS .5..7.23..2..35.6..481..9..78..1....16.3.4.82....8..16..9..362..7.85..4..34.6..9. 97....5.2.248...198..26..4....1.693...3.4.1...629.3....8..97..325...149.4.9....61 ..3.127..75.9.6....41.5.8..96..3.1.4.8.....2.1.7.2..96..5.9.67....2.4.53..968.4.. 91.4...8687.1.52....6..8..73.....91.7..5.6..4.48.....56..7..4....36.2.7112...4.39 ..96.81...867...2.1...4..783...9..65..82.34..94..8...276..5...1.3...975...51.42.. .....17841.9.7..2.5...281...4.91...89.1...3.57...36.9...735...2.9..6.8.33621..... ....5.21716.29..5.......8.....9....354.7.3.913....1.....4.......7..18.25256.4.... .6..98...72..3.4.5..17..62..96..3.42...9.2...58.6..31..73..95..8.9.5..64...82..7. ...9.371.15...2.8.9.78..2..49.1.65.3.........2.53.7.48..9..56.1.1.7...25.462.1... .3.6..84.5...3.1.92...8.....74..2.6.....9.....9.3..75.....6...58.9.4...3.52..3.1.
+
+	total time  =        0.82 secs   (816 ticks @ 1000 us, 1 processor)
+	total alloc = 354,785,256 bytes  (excludes profiling overheads)
+
+COST CENTRE     MODULE  %time %alloc
+
+symbols         Main     72.5   52.5
+symbolsLeft     Main     13.0   29.5
+cellAt          Main      4.4    2.4
+possible        Main      1.3    1.5
+possible.np     Main      1.2    1.1
+column.rows     Main      1.0    1.3
+chunk.(...)     Main      0.5    1.3
+eliminate.elims Main      0.4    1.0
+set.ng          Main      0.2    3.4
+
+
+                                                                                   individual     inherited
+COST CENTRE                              MODULE                  no.     entries  %time %alloc   %time %alloc
+
+MAIN                                     MAIN                     46           0    0.0    0.0   100.0  100.0
+ CAF                                     Main                     91           0    0.0    0.0   100.0  100.0
+  sortPossibles                          Main                    163           1    0.0    0.0     0.0    0.0
+  numColumns                             Main                    118           1    0.0    0.0     0.0    0.0
+  numRows                                Main                    115           1    0.0    0.0     0.0    0.0
+  sZeros                                 Main                    106           1    0.0    0.0     0.0    0.0
+  sValues                                Main                    105           1    0.0    0.0     0.0    0.0
+  aValues                                Main                    104           1    0.0    0.0     0.0    0.0
+  showGrid                               Main                     94           1    0.0    0.0     0.0    0.0
+  main                                   Main                     92           1    0.1    0.1   100.0  100.0
+   solve                                 Main                     95          10    0.0    0.0    99.6   99.8
+    solve.solution                       Main                    139          10    0.0    0.0    99.4   99.6
+     search                              Main                    140          20    0.0    0.0    99.4   99.6
+      search.bst                         Main                    232          10    0.0    0.0     0.0    0.0
+      search.rst                         Main                    231          10    0.0    0.0     0.0    0.0
+      valid                              Main                    217          10    0.1    0.0     0.2    0.0
+       valid.ss                          Main                    229          10    0.0    0.0     0.0    0.0
+        symbols                          Main                    230          10    0.0    0.0     0.0    0.0
+       valid.cc                          Main                    227          10    0.0    0.0     0.0    0.0
+        gridSize                         Main                    228          10    0.0    0.0     0.0    0.0
+       valid.rc                          Main                    225          10    0.0    0.0     0.0    0.0
+        gridSize                         Main                    226          10    0.0    0.0     0.0    0.0
+       valid.bs                          Main                    222          10    0.0    0.0     0.1    0.0
+        blockSize                        Main                    223          10    0.1    0.0     0.1    0.0
+         gridSize                        Main                    224          10    0.0    0.0     0.0    0.0
+       valid.ts                          Main                    221          10    0.0    0.0     0.0    0.0
+       valid.gs                          Main                    219          10    0.0    0.0     0.0    0.0
+        gridSize                         Main                    220          10    0.0    0.0     0.0    0.0
+       valid.v                           Main                    218          10    0.0    0.0     0.0    0.0
+      search.psbgs                       Main                    159          10    0.0    0.0    98.9   99.2
+       eliminate                         Main                    233         462    0.0    0.0    89.6   87.6
+        eliminate.gs                     Main                    237         462    0.0    0.0     0.0    0.0
+         gridSize                        Main                    238         462    0.0    0.0     0.0    0.0
+        eliminate.elims                  Main                    236         462    0.4    1.0    86.8   82.6
+         eliminate.elims.p               Main                    243       19378    0.6    0.3    86.4   81.6
+          possible                       Main                    244       19378    1.2    1.4    85.8   81.2
+           possible.b                    Main                    263        1718    0.0    0.0     2.1    3.6
+            blockAtCP                    Main                    264        1718    0.0    0.0     2.1    3.6
+             blockAtCP.nx                Main                    278        1718    0.0    0.0     0.0    0.0
+             blockAtCP.bs                Main                    273        1718    0.0    0.0     0.1    0.3
+              blockSize                  Main                    274        1718    0.1    0.3     0.1    0.3
+               gridSize                  Main                    275        1718    0.0    0.0     0.0    0.0
+             blockAtCP.ny                Main                    272        1718    0.0    0.0     0.0    0.0
+             blockAtBP                   Main                    265        1718    0.0    0.0     2.0    3.3
+              blockAtBP.bs               Main                    269        1718    0.0    0.0     0.4    0.3
+               blockSize                 Main                    270        1718    0.4    0.3     0.4    0.3
+                gridSize                 Main                    271        1718    0.0    0.0     0.0    0.0
+              blockAtBP.rs               Main                    268        1718    0.0    0.1     0.7    0.7
+               rows                      Main                    276        1718    0.4    0.5     0.7    0.6
+                row                      Main                    280        5154    0.4    0.1     0.4    0.1
+                gridSize                 Main                    277        1718    0.0    0.0     0.0    0.0
+              blockAtBP.cks              Main                    267        1718    0.0    0.1     0.5    1.5
+               chunk                     Main                    279        8148    0.1    0.4     0.5    1.4
+                chunk.rst                Main                    288        2994    0.0    0.0     0.0    0.0
+                chunk.(...)              Main                    282        8148    0.4    0.9     0.4    0.9
+                chunk.cnk                Main                    281        5154    0.0    0.0     0.0    0.0
+              blockAtBP.blk              Main                    266        1718    0.4    0.7     0.4    0.7
+           possible.c                    Main                    258        1718    0.1    0.0     1.1    1.8
+            column                       Main                    259        1718    0.1    0.4     1.0    1.8
+             column.rows                 Main                    260        1718    0.7    1.1     0.9    1.4
+              row                        Main                    262       15462    0.1    0.2     0.1    0.2
+              column.rows.\              Main                    261       15462    0.0    0.2     0.0    0.2
+           possible.r                    Main                    256        1718    0.0    0.0     0.0    0.0
+            row                          Main                    257        1718    0.0    0.0     0.0    0.0
+           possible.np                   Main                    255        1718    0.9    0.9     0.9    0.9
+           possible.sl                   Main                    251        1718    0.0    0.0    15.6   27.2
+            symbolsLeft                  Main                    252        1718   10.5   23.0    15.6   27.2
+             gridSize                    Main                    254       15462    0.1    0.1     0.1    0.1
+             symbols                     Main                    253        1718    4.9    4.2     4.9    4.2
+           possible.psb                  Main                    250        1718    0.4    0.2     0.4    0.2
+           possible.ce                   Main                    248       19378    0.0    0.1     1.8    1.0
+            cellAt                       Main                    249       19378    1.8    0.8     1.8    0.8
+           possible.s                    Main                    245       19378    0.0    0.0    62.7   45.0
+            symbols                      Main                    246       19378   62.7   45.0    62.7   45.0
+        eliminate.ng                     Main                    234         462    0.0    0.0     2.8    4.9
+         eliminate.elim                  Main                    235         462    0.0    0.0     2.8    4.9
+          set                            Main                    283         452    0.0    0.0     2.8    4.9
+           set.ng                        Main                    286         452    0.2    3.4     2.8    4.9
+            cellAt                       Main                    287       36160    2.6    1.5     2.6    1.5
+           set.gs                        Main                    284         452    0.0    0.0     0.0    0.0
+            gridSize                     Main                    285         452    0.0    0.0     0.0    0.0
+       possibleGrids                     Main                    160          10    0.0    0.0     9.3   11.6
+        possibleGrids.psbs               Main                    162          10    0.0    0.0     9.3   11.4
+         possibles                       Main                    165          10    0.0    0.1     8.9   11.3
+          point                          Main                    170         810    0.0    0.0     0.0    0.1
+           point.x                       Main                    178         810    0.0    0.0     0.0    0.0
+            gridSize                     Main                    179         810    0.0    0.0     0.0    0.0
+           point.y                       Main                    176         810    0.0    0.0     0.0    0.0
+            gridSize                     Main                    177         810    0.0    0.0     0.0    0.0
+           point.pt                      Main                    171         810    0.0    0.0     0.0    0.0
+          possible                       Main                    169         810    0.1    0.1     8.9   11.1
+           possible.b                    Main                    193         462    0.0    0.0     0.6    1.1
+            blockAtCP                    Main                    194         462    0.0    0.0     0.6    1.1
+             blockAtCP.nx                Main                    208         462    0.0    0.0     0.0    0.0
+             blockAtCP.bs                Main                    203         462    0.0    0.0     0.1    0.1
+              blockSize                  Main                    204         462    0.1    0.1     0.1    0.1
+               gridSize                  Main                    205         462    0.0    0.0     0.0    0.0
+             blockAtCP.ny                Main                    202         462    0.0    0.0     0.0    0.0
+             blockAtBP                   Main                    195         462    0.0    0.0     0.5    1.0
+              blockAtBP.bs               Main                    199         462    0.0    0.0     0.0    0.1
+               blockSize                 Main                    200         462    0.0    0.1     0.0    0.1
+                gridSize                 Main                    201         462    0.0    0.0     0.0    0.0
+              blockAtBP.rs               Main                    198         462    0.0    0.0     0.0    0.2
+               rows                      Main                    206         462    0.0    0.1     0.0    0.2
+                row                      Main                    210        1386    0.0    0.0     0.0    0.0
+                gridSize                 Main                    207         462    0.0    0.0     0.0    0.0
+              blockAtBP.cks              Main                    197         462    0.1    0.0     0.4    0.5
+               chunk                     Main                    209        2772    0.1    0.2     0.2    0.5
+                chunk.rst                Main                    214        1386    0.0    0.0     0.0    0.0
+                chunk.(...)              Main                    212        2772    0.1    0.3     0.1    0.3
+                chunk.cnk                Main                    211        1386    0.0    0.0     0.0    0.0
+              blockAtBP.blk              Main                    196         462    0.1    0.2     0.1    0.2
+           possible.c                    Main                    188         462    0.0    0.0     0.4    0.5
+            column                       Main                    189         462    0.0    0.1     0.4    0.5
+             column.rows                 Main                    190         462    0.2    0.3     0.4    0.4
+              row                        Main                    192        4158    0.1    0.0     0.1    0.0
+              column.rows.\              Main                    191        4158    0.0    0.0     0.0    0.0
+           possible.r                    Main                    186         462    0.0    0.0     0.0    0.0
+            row                          Main                    187         462    0.0    0.0     0.0    0.0
+           possible.np                   Main                    185         462    0.4    0.2     0.4    0.2
+           possible.sl                   Main                    181         462    0.0    0.0     4.4    7.2
+            symbolsLeft                  Main                    182         462    2.3    6.1     4.4    7.2
+             gridSize                    Main                    184        4158    0.0    0.0     0.0    0.0
+             symbols                     Main                    183         462    2.1    1.1     2.1    1.1
+           possible.psb                  Main                    180         462    0.4    0.1     0.4    0.1
+           possible.ce                   Main                    174         810    0.0    0.0     0.0    0.0
+            cellAt                       Main                    175         810    0.0    0.0     0.0    0.0
+           possible.s                    Main                    172         810    0.0    0.0     2.7    1.9
+            symbols                      Main                    173         810    2.7    1.9     2.7    1.9
+          possibles.gs                   Main                    167          10    0.0    0.0     0.0    0.0
+           gridSize                      Main                    168          10    0.0    0.0     0.0    0.0
+          possibles.gridRange            Main                    166          10    0.0    0.0     0.0    0.0
+         sortPossibles                   Main                    164           0    0.1    0.0     0.4    0.1
+          sortPossibles.comparePossibles Main                    213        2011    0.2    0.1     0.2    0.1
+        possibleGrids.gds                Main                    161          10    0.0    0.0     0.0    0.2
+         possibleGrids.setPossible       Main                    215         462    0.0    0.0     0.0    0.1
+          possibleGrids.setPossible.gs   Main                    216         462    0.0    0.0     0.0    0.1
+           set                           Main                    239          10    0.0    0.0     0.0    0.1
+            set.ng                       Main                    242          10    0.0    0.1     0.0    0.1
+             cellAt                      Main                    247         800    0.0    0.0     0.0    0.0
+            set.gs                       Main                    240          10    0.0    0.0     0.0    0.0
+             gridSize                    Main                    241          10    0.0    0.0     0.0    0.0
+      complete                           Main                    141          20    0.0    0.0     0.2    0.4
+       symbolsLeft                       Main                    156          20    0.0    0.3     0.0    0.3
+        gridSize                         Main                    158         180    0.0    0.0     0.0    0.0
+        symbols                          Main                    157          20    0.0    0.0     0.0    0.0
+       valid                             Main                    142          20    0.0    0.0     0.2    0.1
+        valid.ss                         Main                    154          20    0.0    0.0     0.1    0.0
+         symbols                         Main                    155          20    0.1    0.0     0.1    0.0
+        valid.cc                         Main                    152          20    0.0    0.0     0.0    0.0
+         gridSize                        Main                    153          20    0.0    0.0     0.0    0.0
+        valid.rc                         Main                    150          20    0.0    0.0     0.0    0.0
+         gridSize                        Main                    151          20    0.0    0.0     0.0    0.0
+        valid.bs                         Main                    147          20    0.0    0.0     0.0    0.0
+         blockSize                       Main                    148          20    0.0    0.0     0.0    0.0
+          gridSize                       Main                    149          20    0.0    0.0     0.0    0.0
+        valid.ts                         Main                    146          20    0.0    0.0     0.0    0.0
+        valid.gs                         Main                    144          20    0.0    0.0     0.0    0.0
+         gridSize                        Main                    145          20    0.0    0.0     0.0    0.0
+        valid.v                          Main                    143          20    0.1    0.0     0.1    0.0
+    valid                                Main                    125          10    0.0    0.0     0.0    0.0
+     valid.ss                            Main                    137          10    0.0    0.0     0.0    0.0
+      symbols                            Main                    138          10    0.0    0.0     0.0    0.0
+     valid.cc                            Main                    135          10    0.0    0.0     0.0    0.0
+      gridSize                           Main                    136          10    0.0    0.0     0.0    0.0
+     valid.rc                            Main                    133          10    0.0    0.0     0.0    0.0
+      gridSize                           Main                    134          10    0.0    0.0     0.0    0.0
+     valid.bs                            Main                    130          10    0.0    0.0     0.0    0.0
+      blockSize                          Main                    131          10    0.0    0.0     0.0    0.0
+       gridSize                          Main                    132          10    0.0    0.0     0.0    0.0
+     valid.ts                            Main                    129          10    0.0    0.0     0.0    0.0
+     valid.gs                            Main                    127          10    0.0    0.0     0.0    0.0
+      gridSize                           Main                    128          10    0.0    0.0     0.0    0.0
+     valid.v                             Main                    126          10    0.0    0.0     0.0    0.0
+    complete                             Main                     96          10    0.0    0.0     0.2    0.2
+     symbolsLeft                         Main                    122          10    0.1    0.1     0.1    0.2
+      gridSize                           Main                    124          90    0.0    0.0     0.0    0.0
+      symbols                            Main                    123          10    0.0    0.0     0.0    0.0
+     valid                               Main                     97          10    0.0    0.0     0.1    0.0
+      valid.ss                           Main                    120          10    0.0    0.0     0.0    0.0
+       symbols                           Main                    121          10    0.0    0.0     0.0    0.0
+      valid.cc                           Main                    117          10    0.0    0.0     0.0    0.0
+       gridSize                          Main                    119          10    0.0    0.0     0.0    0.0
+      valid.rc                           Main                    114          10    0.0    0.0     0.0    0.0
+       gridSize                          Main                    116          10    0.0    0.0     0.0    0.0
+      valid.bs                           Main                    111          10    0.0    0.0     0.0    0.0
+       blockSize                         Main                    112          10    0.0    0.0     0.0    0.0
+        gridSize                         Main                    113          10    0.0    0.0     0.0    0.0
+      valid.ts                           Main                    109          10    0.1    0.0     0.1    0.0
+      valid.gs                           Main                     99          10    0.0    0.0     0.0    0.0
+       gridSize                          Main                    100          10    0.0    0.0     0.0    0.0
+      valid.v                            Main                     98          10    0.0    0.0     0.0    0.0
+   main.sudokus                          Main                     93           1    0.0    0.0     0.2    0.1
+    readGrid                             Main                    101          10    0.1    0.0     0.2    0.1
+     readGrid.fsg                        Main                    103          10    0.1    0.0     0.1    0.0
+     chunk                               Main                    102         100    0.0    0.0     0.0    0.0
+      chunk.rst                          Main                    110          90    0.0    0.0     0.0    0.0
+      chunk.(...)                        Main                    108          90    0.0    0.0     0.0    0.0
+      chunk.cnk                          Main                    107          90    0.0    0.0     0.0    0.0
+ CAF                                     GHC.Conc.Signal          88           0    0.0    0.0     0.0    0.0
+ CAF                                     GHC.IO.Encoding          79           0    0.0    0.0     0.0    0.0
+ CAF                                     GHC.IO.Handle.FD         78           0    0.0    0.0     0.0    0.0
+ CAF                                     GHC.IO.Encoding.Iconv    62           0    0.0    0.0     0.0    0.0

@@ -5,6 +5,7 @@ import Control.Monad
 import System.IO
 import System.Environment
 
+type Sudoku = (Grid, [Symbol], [Symbol], Int) --Grid, Symbols, SymbolsLeft, Size
 type Grid = [String]
 type Row = String
 type Column = String
@@ -51,19 +52,20 @@ columns :: Grid -> [Column]
 block :: Grid -> Position -> Block
 blockAtCP :: Grid -> Point -> Block --At a cells point
 blockAtBP :: Grid -> Point -> Block --At a blockwise point
-possible :: Grid -> [Symbol] -> Point -> Possible
-possibles :: Grid -> [Possible]
-eliminate :: [Symbol] -> Int -> Grid -> Grid -- Symbols -> GridSize -> Grid -> New Grid
+possible :: Sudoku -> Point -> Possible
+possibles :: Sudoku -> [Possible]
+eliminate :: Sudoku -> Sudoku
 set :: Grid -> Point -> Symbol -> Grid
 complete :: Grid -> Bool
-choices :: Grid -> Int
-search :: [Grid] -> Maybe Grid
+choices :: Sudoku -> Int
+search :: [Sudoku] -> Maybe Sudoku
 --search' :: [Possible] -> Maybe Grid
 bestChoice :: [Possible] -> Possible
-possibleGrids :: Grid -> [Grid]
+possibleSudokus :: Sudoku -> [Sudoku]
 sortPossibles :: [Possible] -> [Possible]
-solve :: Grid -> Grid
-orderGrids :: [Grid] -> [Grid]
+solve :: Sudoku -> Sudoku
+grid :: Sudoku -> Grid
+sudoku :: Grid -> Sudoku
 
 --solvable :: Grid -> Bool
 
@@ -76,6 +78,13 @@ numRows = gridSize
 numColumns = gridSize
 numBlocks = gridSize
 position g (x,y) = y * (numColumns g) + x
+grid (g,_,_,_) = g
+sudoku g = (g, sbs, sbslft, gs)
+	where
+		sbs = symbols g
+		sbslft = symbolsLeft g sbs
+		gs = gridSize g
+
 point g p = pt
 	where
 		pt = (x,y)
@@ -119,10 +128,7 @@ printFormat g = fg
 		fg = addLines (map (++"\n") (map (intersperse ' ') (map concat (map (intersperse "|") (map (chunk bs) g)))))
 		addLines d = sl ++ "\n" ++ concat["| " ++ l ++ " |\n" | l <- lines(concat(intercalate [ln++"\n"] (chunk bs d)))] ++ sl ++ "\n"
 
-cellAt g (x,y)
-	| length g <= y = '0'
-	| length (g !! y) <= x = '0'
-	| otherwise = g !! y !! x
+cellAt g (x,y) = g !! y !! x
 
 cell g p = cellAt g (point g p)
 
@@ -170,16 +176,16 @@ set g (x,y) c
 		gs = gridSize g
 		ng = [[if ix == x && iy == y then c else cellAt g (ix,iy) | ix <- [0..gs-1]] | iy <- [0..gs-1]]
 
-eliminate sbs gs g  = ng
+eliminate s@(g,sbs,sbslft,gs) = ng
 	where
-		elims = [(x,y,e) | x <- [0..gs-1], y <- [0..gs-1], let p = snd $ possible g sbs (x,y), length p == 1, e <- p]
-		ng = elim g elims
-		elim g [] = g
-		elim g ((x,y,e):_) = eliminate sbs gs (set g (x,y) e)
+		elims = [(x,y,e) | x <- [0..gs-1], y <- [0..gs-1], let p = snd (possible s (x,y)), length p == 1, e <- p]
+		ng = elim g elims 
+		elim g [] = s
+		elim g ((x,y,e):_) = eliminate ((set g (x,y) e),sbs,sbslft,gs)
 		
 complete g = valid g && (length $ symbolsLeft g (symbols g)) == 0
 
-possible g sbs p@(x,y) 
+possible s@(g,sbs,sbslft,_) p@(x,y) 
 	| ce `elem` sbs = (p,[])
 	| otherwise = (p,psb)
 	where
@@ -187,11 +193,11 @@ possible g sbs p@(x,y)
 		r = row g y
 		c = column g x
 		b = blockAtCP g (x,y)
-		sl = symbolsLeft g sbs
+		sl = sbslft
 		np = nub (r++c++b)
 		psb = [p | p <- sl, not (p `elem` np)]
 		
-possibles g = filter ((>0) . length . snd) (map (possible g (symbols g)) (map (point g) gridRange))
+possibles s@(g,_,_,_) = filter ((>0) . length . snd) (map (possible s) (map (point g) gridRange))
 	where
 		gs = gridSize g
 		gridRange = [0..gs*gs-1]
@@ -199,17 +205,17 @@ possibles g = filter ((>0) . length . snd) (map (possible g (symbols g)) (map (p
 choices g = length (concatMap snd (possibles g))
 choices' g = length (filter (`elem` sValues) (concat g))
 
-search (g:gs)
+search (s@(g,sbs,sbslft,gs):sdslft)
 	| g == [] = Nothing
-	| complete g = Just g
-	| length psbgs == 0 = search gs
-	| valid g && rst /= [] = search(bst : gs ++ rst)
-	| valid g = search (bst : gs)
-	| otherwise = search gs
+	| complete g = Just s
+	| length psbsds == 0 = search sdslft
+	| valid g && rst /= [] = search(bst ++ sdslft ++ rst)
+	| valid g = search (bst ++ sdslft)
+	| otherwise = search sdslft
 	where
-		psbgs = map (eliminate (symbols g) (gridSize g)) (possibleGrids g) 
-		bst = if length psbgs > 0 then head psbgs else []
-		rst = if length psbgs > 0 then tail psbgs else []
+		psbsds = map eliminate (possibleSudokus s)
+		bst = if length psbsds > 0 then [head psbsds] else []
+		rst = if length psbsds > 0 then tail psbsds else []
 
 sortPossibles = sortBy comparePossibles
 	where
@@ -217,28 +223,26 @@ sortPossibles = sortBy comparePossibles
 		
 bestChoice p = head (sortPossibles p)
 		
-possibleGrids g = gds
+possibleSudokus s@(g,_,_,_) = gds
 	where
-		psbs = sortPossibles (possibles g)
-		gds = concatMap (setPossible g) psbs
+		psbs = sortPossibles (possibles s)
+		gds = map sudoku (concatMap (setPossible g) psbs)
 		setPossible g (p,s) = gs
 			where
 				gs = map (set g p) s
 				
-solve g
-	| complete g = g
-	| valid g /= True = g
+solve s@(g,_,_,_)
+	| complete g = s
+	| valid g /= True = s
 	| otherwise = case solution of
 						Just _ -> fromJust solution
-						Nothing -> g
+						Nothing -> s
 	where
-		solution = (search [g])
-		
-orderGrids = sortBy compareGrids
-	where compareGrids a b = choices a `compare` choices b
+		solution = (search [s])
 		
 main = do
 	args <- getArgs
-	let sudokus = map readGrid (args)
-	mapM putStrLn (map showGrid (map solve sudokus))
+	let sudokus = map sudoku (map readGrid (args))
+	mapM putStrLn (map printFormat (map grid sudokus))
+	mapM putStrLn (map printFormat (map (grid.solve) sudokus))
 	putStrLn ("Done solving " ++ (show $ length sudokus) ++ " sudokus!")
