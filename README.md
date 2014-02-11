@@ -1,20 +1,51 @@
-Sudoku solving in haskell
-==
+#SudokuSolver - Sudoku solving in Haskell
 
-The goal of this project was for me to learn haskell and so the code is very rough.
+##Usage:
 
-Usage:
-> execute: ./Sudoku infile outfile
+```shell
+./sudoku \<insert sudoku 1 here\> \<insert sudoku 2 here\> \<insert sudoku n here\>
+```
 
-Infile is the filename of an file containing one or more sudokus.
-The accepted length formats are squares of squares:
--	1^2^2 = 1
--	2^2^2 = 16
--	3^2^2 = 81
--	4^2^2 = 256
--	Higher should work but will be really slow
+##Sudoku formats:
+  - Size:
+    - 2x2
+    - 3x3
+    - 9x9
+    - 16x16
+    - Onwards - probably to large at this point anyway
+  - Symbols
+    - [0 _.,*-] for zeros
+    - [1..9] to [A..Z] for symbols or starting at [A..Z] without the numbers
 
-Values go from 1-9 to a-z with spaces, dots, commas, and zeros as empty cells
-One sudoku per line for example:
-> 1....8.74...3....98..6...5....267.1..7.....2..9.185....5...9..19....6...64.8....7
-For a total 81 chars for a 9x9 sudoku.
+##Format usage example
+```shell
+./sudoku .1.....7.6...8...25..1.9..3..78.12......3......86.54..7..2.3..44...7...1.9.....6.
+
++-----------------------+
+| . 1 . | . . . | . 7 . |
+| 6 . . | . 8 . | . . 2 |
+| 5 . . | 1 . 9 | . . 3 |
+| ------+-------+------ |
+| . . 7 | 8 . 1 | 2 . . |
+| . . . | . 3 . | . . . |
+| . . 8 | 6 . 5 | 4 . . |
+| ------+-------+------ |
+| 7 . . | 2 . 3 | . . 4 |
+| 4 . . | . 7 . | . . 1 |
+| . 9 . | . . . | . 6 . |
++-----------------------+
+
++-----------------------+
+| 8 1 2 | 3 6 4 | 5 7 9 |
+| 6 3 9 | 5 8 7 | 1 4 2 |
+| 5 7 4 | 1 2 9 | 6 8 3 |
+| ------+-------+------ |
+| 9 5 7 | 8 4 1 | 2 3 6 |
+| 1 4 6 | 7 3 2 | 9 5 8 |
+| 3 2 8 | 6 9 5 | 4 1 7 |
+| ------+-------+------ |
+| 7 6 1 | 2 5 3 | 8 9 4 |
+| 4 8 5 | 9 7 6 | 3 2 1 |
+| 2 9 3 | 4 1 8 | 7 6 5 |
++-----------------------+
+```
