@@ -33,7 +33,7 @@ point :: Grid -> Position -> Point
 chunk :: Int -> [a] -> [[a]]
 valid :: Grid -> Bool				
 symbols :: Grid -> [Symbol]
-symbolsLeft :: Grid -> [Symbol]
+symbolsLeft :: Grid -> [Symbol]-> [Symbol]
 symbolsDone :: Grid -> [Symbol]
 printFormat :: Grid -> String
 readGrid :: String -> Grid
@@ -51,11 +51,10 @@ columns :: Grid -> [Column]
 block :: Grid -> Position -> Block
 blockAtCP :: Grid -> Point -> Block --At a cells point
 blockAtBP :: Grid -> Point -> Block --At a blockwise point
-possible :: Grid -> Point -> Possible
+possible :: Grid -> [Symbol] -> Point -> Possible
 possibles :: Grid -> [Possible]
-eliminate :: Grid -> Grid
+eliminate :: [Symbol] -> Int -> Grid -> Grid -- Symbols -> GridSize -> Grid -> New Grid
 set :: Grid -> Point -> Symbol -> Grid
-assign :: Grid -> Point -> Symbol -> Grid
 complete :: Grid -> Bool
 choices :: Grid -> Int
 search :: [Grid] -> Maybe Grid
@@ -106,7 +105,7 @@ valid g = if v then True else False
 
 symbols g = sort (filter (`elem` sValues) (nub (concat g)))
 
-symbolsLeft g = [cs | cs <- (symbols g), (length(filter (==cs) (concat g))) /= (gridSize g)]
+symbolsLeft g sbs = [cs | cs <- sbs, (length(filter (==cs) (concat g))) /= (gridSize g)]
 
 symbolsDone g = [cs | cs <- (symbols g), (length(filter (==cs) (concat g))) == (gridSize g)]
 
@@ -170,33 +169,29 @@ set g (x,y) c
 	where
 		gs = gridSize g
 		ng = [[if ix == x && iy == y then c else cellAt g (ix,iy) | ix <- [0..gs-1]] | iy <- [0..gs-1]]
-		
-assign g p = eliminate . (set g p)
 
-eliminate g = ng
+eliminate sbs gs g  = ng
 	where
-		gs = gridSize g
-		elims = [(x,y,e) | x <- [0..gs-1], y <- [0..gs-1], let p = snd $ possible g (x,y), length p == 1, e <- p]
+		elims = [(x,y,e) | x <- [0..gs-1], y <- [0..gs-1], let p = snd $ possible g sbs (x,y), length p == 1, e <- p]
 		ng = elim g elims
 		elim g [] = g
-		elim g ((x,y,e):_) = eliminate (set g (x,y) e)
+		elim g ((x,y,e):_) = eliminate sbs gs (set g (x,y) e)
 		
-complete g = valid g && (length $ symbolsLeft g) == 0
+complete g = valid g && (length $ symbolsLeft g (symbols g)) == 0
 
-possible g p@(x,y)
-	| ce `elem` s = (p,[])
+possible g sbs p@(x,y) 
+	| ce `elem` sbs = (p,[])
 	| otherwise = (p,psb)
 	where
-		s = symbols g
 		ce = cellAt g (x,y)
 		r = row g y
 		c = column g x
 		b = blockAtCP g (x,y)
-		sl = symbolsLeft g
+		sl = symbolsLeft g sbs
 		np = nub (r++c++b)
 		psb = [p | p <- sl, not (p `elem` np)]
 		
-possibles g = filter ((>0) . length . snd) (map (possible g) (map (point g) gridRange))
+possibles g = filter ((>0) . length . snd) (map (possible g (symbols g)) (map (point g) gridRange))
 	where
 		gs = gridSize g
 		gridRange = [0..gs*gs-1]
@@ -212,7 +207,7 @@ search (g:gs)
 	| valid g = search (bst : gs)
 	| otherwise = search gs
 	where
-		psbgs = map eliminate (possibleGrids g)
+		psbgs = map (eliminate (symbols g) (gridSize g)) (possibleGrids g) 
 		bst = if length psbgs > 0 then head psbgs else []
 		rst = if length psbgs > 0 then tail psbgs else []
 
@@ -244,13 +239,6 @@ orderGrids = sortBy compareGrids
 		
 main = do
 	args <- getArgs
-	let inFile = args !! 0
-	let outFile = args !! 1
-	handle <- openFile outFile WriteMode
-	hClose handle
-	handle <- openFile inFile ReadMode
-	contents <- hGetContents handle
-	let sudokus = map readGrid (lines contents)
-	mapM (appendFile outFile) (map (++"\n") (map showGrid (map solve sudokus)))
-	hClose handle
+	let sudokus = map readGrid (args)
+	mapM putStrLn (map showGrid (map solve sudokus))
 	putStrLn ("Done solving " ++ (show $ length sudokus) ++ " sudokus!")
