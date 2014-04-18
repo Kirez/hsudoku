@@ -134,17 +134,13 @@ cell g p = cellAt g (point g p)
 
 cells = concat
 		
-row g p
-	| length g <= p = []
-	| otherwise = g !! p
+row g p = g !! p
 	
 rowAt g (_,y) = row g y
 
 rows g = map (row g) [0..(numRows g)-1]
 
-column g p = [r !! p | r <- rows]
-	where
-		rows = filter (\x -> length x > p) [row g r | r <- [0..(length g) - 1]]
+column g p = [r !! p | r <- rows g]
 		
 columnAt g (x,_) = column g x
 
@@ -243,6 +239,6 @@ solve s@(g,_,_,_)
 main = do
 	args <- getArgs
 	let sudokus = map sudoku (map readGrid (args))
-	mapM putStrLn (map printFormat (map grid sudokus))
+	mapM putStrLn (map showGrid (map grid sudokus))
 	mapM putStrLn (map printFormat (map (grid.solve) sudokus))
 	putStrLn ("Done solving " ++ (show $ length sudokus) ++ " sudokus!")
