@@ -1,13 +1,11 @@
 module Main where
 
 import HSudoku
-import Data.Maybe (fromJust, isJust)
+import Data.Maybe (fromJust, isJust, mapMaybe)
 
 main :: IO ()
 main = do
     content <- getContents
-    let grids = map parseGrid (lines content)
-    let result = [r | g <- grids, let t = trySolve .fromJust $ g, let r = if isJust g then t else Nothing]
-    mapM_ (putStrLn . \g -> case g of
-                                Just x  -> showGrid x
-                                Nothing -> []) result
+    let grids = mapMaybe parseGrid (lines content)
+    let results = zip grids (map solve grids)
+    mapM_ (putStrLn . \g -> maybe (showGrid . fst $ g) showGrid (snd g)) results

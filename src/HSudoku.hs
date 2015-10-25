@@ -1,6 +1,7 @@
 module HSudoku where
 
 import Data.List
+import Data.Ord (comparing)
 import Data.List.Split (chunksOf)
 import Data.Array
 import Data.Ix
@@ -77,12 +78,6 @@ techniques = [single, double, tripple, hiddenSingle, hiddenDouble
 
 emptyGrid :: Grid
 emptyGrid = array box [(c, Left digits) | c <- coords]
-
-ts :: String
-ts = ".32...41....4.7...86..1..59..67.23..4.......7..39.58..18..5..72...6.1....25...14."
-
-tg :: Grid
-tg = fromJust . single . fromJust . parseGrid $ ts
 
 --Logic
 
@@ -245,9 +240,7 @@ eliminate g (c, d) = case currentCell of
 assign :: Grid -> (Coord, Digit) -> Maybe Grid
 assign g (c, d)
     | d `elem` digits = case oldCell of
-        Right _ -> error $ "Cell at: "
-                        ++ showCoord c
-                        ++ " has already beeen assigned"
+        Right _ -> Just g
         Left ds -> foldM eliminate ng (zip cellPeers (repeat d))
     | otherwise = Nothing
     where
@@ -256,17 +249,53 @@ assign g (c, d)
         cellPeers = peers ! c
         ng = g // [newCell]
 
-trySolve :: Grid -> Maybe Grid
-trySolve = maybeUntilNoDiff (applyTechniques techniques)
+
+unsolvedByCertainty :: Grid -> [(Coord, [Digit])]
+unsolvedByCertainty g = sortBy (comparing (length . snd)) unsolvedAssocs
+    where unsolvedAssocs = [(coord, psbs) | (coord, Left psbs) <- assocs g]
+
+mostCertainUnsolved :: Grid -> Maybe (Coord, [Digit])
+mostCertainUnsolved g = if null usbc then Nothing else Just (head usbc)
+    where usbc = unsolvedByCertainty g
+
+search :: Grid -> Maybe Grid
+search g = if isJust mostC && length digits > 1 then
+    case solve ng of
+        Just x -> Just x
+        Nothing -> solve (g // [(coord, if length ndigits > 1
+            then Left ndigits
+            else Right $ head ndigits)])
+    else Nothing
+    where
+        mostC = mostCertainUnsolved g
+        coord = fst . fromJust $ mostC
+        digits = snd . fromJust $ mostC
+        digit = head digits
+        ndigits = delete digit digits
+        ng = g // [(coord, Right digit)]
+
+trySolve :: Grid -> Either Grid Grid
+trySolve g = if isSolved result
+    then Right result
+    else Left result
+    where
+        result = maybeUntilNoDiff (applyTechniques techniques) g
+
+solve :: Grid -> Maybe Grid
+solve g = case result of
+    Left x  -> search x
+    Right x -> Just x
+    where
+        result = trySolve g
 
 --Util
 
 -- |Takes a grid and a list of coordinates to check against a list of digits
 --  Returns a list of coordinates where the digits are possible
-possibles :: Grid -> [Coord] -> [Digit] -> [Coord]
+possibles :: Grid -> [Coord] -> [Digit] -> [Coord] -- TODO: Optimize
 possibles g cs ds = ps
     where
-        dict = zip cs . map (g !) $ cs
+        dict = zip cs . map (g !) $ cs -- Bottleneck
         ps = [coord | (coord, Left ds') <- dict, all (`elem` ds') ds]
 
 missing :: Grid -> Unit -> [Digit]
@@ -274,10 +303,10 @@ missing g u = digits \\ rs
     where
         rs = rights (map (g!) u)
 
-maybeUntilNoDiff :: Eq a => (a -> Maybe a) -> a -> Maybe a
+maybeUntilNoDiff :: Eq a => (a -> Maybe a) -> a -> a
 maybeUntilNoDiff f a = case na of
-    Nothing -> Just a
-    Just x  -> if x == a then Just a else maybeUntilNoDiff f x
+    Nothing -> a
+    Just x  -> if x == a then a else maybeUntilNoDiff f x
     where
         na = f a
 
@@ -301,7 +330,7 @@ cellFilled c = case c of
     Left _  -> False
 
 isSolved :: Grid -> Bool
-isSolved g = (==81) . length . rights . elems $ g
+isSolved g = all (==[One .. Nine]) $ map (sort.rights) [map (g !) u | u <- unitList]
 
 --Parse
 
