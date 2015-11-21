@@ -3,11 +3,11 @@ module HSudoku where
 import Data.List
 import Data.Ord (comparing)
 import Data.List.Split (chunksOf)
-import Data.Array
-import Data.Ix
-import Data.Either
-import Data.Maybe
+import Data.Array.IArray
+import Data.Either (rights)
+import Data.Maybe (isJust, fromJust, isNothing)
 import Data.Function (on)
+import qualified Data.Set as S
 
 import Control.Monad (foldM, replicateM)
 
@@ -65,7 +65,7 @@ units :: Array Coord [Unit]
 units = array box [(c, [cs | cs <- unitList, c `elem` cs]) | c <- coords]
 
 peers :: Array Coord [Coord]
-peers = array box [(c, filter (/=c) . nub . concat $ (units ! c)) | c <- coords]
+peers = array box [(c, filter (/=c) . S.toList . S.fromList . concat $ (units ! c)) | c <- coords]
 
 unitList :: [Unit]
 unitList =  [cross letters [c] | c <- digits] ++
@@ -73,8 +73,11 @@ unitList =  [cross letters [c] | c <- digits] ++
             [cross ls ds | ls <- chunksOf 3 letters, ds <- chunksOf 3 digits]
 
 techniques :: [Technique]
-techniques = [single, double, tripple, hiddenSingle, hiddenDouble
-             ,hiddenTripple]
+techniques = [single, hiddenSingle, hiddenDouble, double]
+--techniques = [single, hiddenSingle, hiddenDouble, hiddenTripple, double, tripple]
+--techniques = [single, hiddenSingle, hiddenDouble, hiddenTripple, double, tripple]
+--techniques = [single, hiddenSingle, hiddenDouble, hiddenTripple, double, tripple]
+--techniques = [single, hiddenSingle, hiddenDouble, hiddenTripple, double, tripple]
 
 emptyGrid :: Grid
 emptyGrid = array box [(c, Left digits) | c <- coords]
@@ -87,8 +90,8 @@ emptyGrid = array box [(c, Left digits) | c <- coords]
 --  Whether or not a cell is kindred with another is determined by the Int.
 --  For cells to belong in a kindred set they must contain x number of possible
 --  digits and there must be exactly x number of kindreds in the unit
-findKindreds :: Grid -> Int -> [(Unit, [[Coord]])]
-findKindreds g n = kindreds
+findKindredCells :: Grid -> Int -> [(Unit, [[Coord]])]
+findKindredCells g n = kindreds
     where
         unsolvedList = map (filter (not . cellFilled . (g !))) unitList
         nsList = map (filter ((==n) . length . (\(Left x) -> x) . (g !)))
@@ -104,21 +107,21 @@ findKindreds g n = kindreds
 single :: Technique
 single g = ng
     where
-        oneks = findKindreds g 1
-        assignments = nub
+        oneks = findKindredCells g 1
+        assignments = S.toList . S.fromList $
             [ (coord, head digits) | (_, ones) <- oneks
             , one <- ones, coord <- one
             , let digits = (\(Left x) -> x) (g ! coord)
             ]
         ng = if not . null $ assignments
-             then foldM assign g (nub assignments)
+             then foldM assign g (S.toList . S.fromList $ assignments)
              else Nothing
 
 hiddenSingle :: Technique
 hiddenSingle g = ng
     where
         ums = zip unitList (map (missing g) unitList)
-        hss = nub
+        hss = S.toList . S.fromList $
             [ (coord, digit) | (unit, ms) <- ums, digit <- ms
             , let coords = possibles g unit [digit]
             , let coord = head coords, length coords == 1
@@ -128,7 +131,7 @@ hiddenSingle g = ng
 hiddenDouble :: Technique
 hiddenDouble g = ng
     where
-        uhd u = nub
+        uhd u = S.toList . S.fromList $
             [ hd | a <- twops, b <- twops \\ [a]
             , let hd = (sort [fst a, fst b], snd a)
             , snd a == snd b
@@ -159,7 +162,7 @@ hiddenDouble g = ng
 hiddenTripple :: Technique
 hiddenTripple g = ng
     where
-        uht u = nub
+        uht u = S.toList . S.fromList $
             [ ht | a <- trips
             , b <- trips \\ [a]
             , c <- trips \\ [a, b]
@@ -192,8 +195,8 @@ hiddenTripple g = ng
 double :: Technique
 double g = ng
     where
-        twoks = findKindreds g 2
-        toElim = nub
+        twoks = findKindredCells g 2
+        toElim = S.toList . S.fromList $
             [ (c, ds) | (u, twos) <- twoks
             , two <- twos, c <- u \\ two
             , ds <- (\(Left x) -> x) (g ! head two)
@@ -203,8 +206,8 @@ double g = ng
 tripple :: Technique
 tripple g = ng
     where
-        tripks = findKindreds g 3
-        toElim = nub
+        tripks = findKindredCells g 3
+        toElim = S.toList . S.fromList $
             [ (c, ds) | (u, trips) <- tripks
             , trip <- trips, c <- u \\ trip
             , ds <- (\(Left x) -> x) (g ! head trip)
@@ -238,11 +241,9 @@ eliminate g (c, d) = case currentCell of
         currentCell = g ! c
 
 assign :: Grid -> (Coord, Digit) -> Maybe Grid
-assign g (c, d)
-    | d `elem` digits = case oldCell of
-        Right _ -> Just g
-        Left ds -> foldM eliminate ng (zip cellPeers (repeat d))
-    | otherwise = Nothing
+assign g (c, d) = case oldCell of
+    Right _ -> Just g
+    Left ds -> foldM eliminate ng (zip cellPeers (repeat d))
     where
         oldCell = g ! c
         newCell = (c, Right d)
@@ -295,7 +296,7 @@ solve g = case result of
 possibles :: Grid -> [Coord] -> [Digit] -> [Coord] -- TODO: Optimize
 possibles g cs ds = ps
     where
-        dict = zip cs . map (g !) $ cs -- Bottleneck
+        dict = [(coord, cell) | coord <- cs, let cell = g ! coord]
         ps = [coord | (coord, Left ds') <- dict, all (`elem` ds') ds]
 
 missing :: Grid -> Unit -> [Digit]
@@ -312,14 +313,6 @@ maybeUntilNoDiff f a = case na of
 
 untilNoDiff :: Eq a => (a -> a) -> a -> a
 untilNoDiff f a = if a == na then a else untilNoDiff f na where na = f a
-
--- https://gist.github.com/User4574/2363886
-alleq :: Eq a => [a] -> Maybe a -> Bool
-alleq [] _ = True
-alleq (h:t) Nothing = alleq t (Just h)
-alleq (h:t) (Just e)
-	| h == e = alleq t (Just e)
-	| otherwise = False
 
 cross :: [l] -> [d] -> [(l,d)]
 cross ls ds  = [(l,d) | l <- ls, d <- ds]
