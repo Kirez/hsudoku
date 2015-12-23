@@ -9,7 +9,7 @@ import Data.Maybe (isJust, fromJust, isNothing)
 import Data.Function (on)
 import qualified Data.Set as S
 
-import Control.Monad (foldM, replicateM)
+import Control.Monad (foldM)
 
 data Letter = A
             | B
@@ -109,9 +109,9 @@ single g = ng
     where
         oneks = findKindredCells g 1
         assignments = S.toList . S.fromList $
-            [ (coord, head digits) | (_, ones) <- oneks
+            [ (coord, head ds) | (_, ones) <- oneks
             , one <- ones, coord <- one
-            , let digits = (\(Left x) -> x) (g ! coord)
+            , let ds = (\(Left x) -> x) (g ! coord)
             ]
         ng = if not . null $ assignments
              then foldM assign g (S.toList . S.fromList $ assignments)
@@ -123,8 +123,8 @@ hiddenSingle g = ng
         ums = zip unitList (map (missing g) unitList)
         hss = S.toList . S.fromList $
             [ (coord, digit) | (unit, ms) <- ums, digit <- ms
-            , let coords = possibles g unit [digit]
-            , let coord = head coords, length coords == 1
+            , let cs = possibles g unit [digit]
+            , let coord = head cs, length cs == 1
             ]
         ng = if not . null $ hss then foldM assign g hss else Nothing
 
@@ -138,14 +138,14 @@ hiddenDouble g = ng
             ]
             where
                 ms = missing g u
-                twops = [ (m, coords) | m <- ms
-                        , let coords = possibles g u [m]
-                        , length coords == 2
+                twops = [ (m, cs) | m <- ms
+                        , let cs = possibles g u [m]
+                        , length cs == 2
                         ]
 
         uhds = filter ((>0) . length . snd) $ zip unitList (map uhd unitList)
         toElim =
-            [ (c, d) | (u, uhd) <- uhds, c <- u, (hds, hcs) <- uhd
+            [ (c, d) | (u, uhd') <- uhds, c <- u, (hds, hcs) <- uhd'
             , let psb = (\a ->  case a of
                                     Left x -> x
                                     Right _ -> []) (g ! c)
@@ -172,13 +172,13 @@ hiddenTripple g = ng
             where
                 ms = missing g u
                 trips = [ (m, coords) | m <- ms
-                        , let coords = possibles g u [m]
-                        , length coords == 3
+                        , let cs = possibles g u [m]
+                        , length cs == 3
                         ]
 
         uhts = filter ((>0) . length . snd) $ zip unitList (map uht unitList)
         toElim =
-            [ (c, d) | (u, uht) <- uhts, c <- u, (hts, hcs) <- uht
+            [ (c, d) | (u, uht') <- uhts, c <- u, (hts, hcs) <- uht'
             , let psb = (\a -> case a of
                                     Left x -> x
                                     Right _ -> []) (g ! c)
@@ -243,7 +243,7 @@ eliminate g (c, d) = case currentCell of
 assign :: Grid -> (Coord, Digit) -> Maybe Grid
 assign g (c, d) = case oldCell of
     Right _ -> Just g
-    Left ds -> foldM eliminate ng (zip cellPeers (repeat d))
+    Left _  -> foldM eliminate ng (zip cellPeers (repeat d))
     where
         oldCell = g ! c
         newCell = (c, Right d)
@@ -270,8 +270,8 @@ search g = if isJust mostC && length digits > 1 then
     where
         mostC = mostCertainUnsolved g
         coord = fst . fromJust $ mostC
-        digits = snd . fromJust $ mostC
-        digit = head digits
+        ds = snd . fromJust $ mostC
+        digit = head ds
         ndigits = delete digit digits
         ng = g // [(coord, Right digit)]
 
@@ -375,9 +375,9 @@ formatGridString s = unlines $ [upperline] ++ vprawls ++ [lowerline]
 --IO
 
 printSideBySideGridStrings :: (String, String) -> IO ()
-printSideBySideGridStrings (s1, s2) = putStrLn $ lmerge (s1, s2)
+printSideBySideGridStrings (s1, s2) = putStrLn lmerge
     where
-        lmerge (a, b) = unlines [a ++ " " ++ b |
+        lmerge = unlines [a ++ " " ++ b |
                                 (a, b) <- zip
                                 (lines $ formatGridString s1)
                                 (lines $ formatGridString s2)]
